@@ -7,8 +7,7 @@ Follow these instructions to run the Dash application
 docker image import archive_name.tar image_name
 ```
 
-
-2. Execute the Dash application
+2. Execute the application
 ```bash
 docker run -h localhost -p 9000:9000 -d --name container_name image_name
 ```

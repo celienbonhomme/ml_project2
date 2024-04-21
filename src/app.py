@@ -59,6 +59,7 @@ app.layout = html.Div([
 
         dcc.Tab(label='EDA', children=[
             html.Div([
+                html.H2('Exploratory Data Analysis'),
                 html.Div([ # Dates + reset button
                     html.Div([ # Dates + labels
                         html.Div([ # Date min
@@ -138,7 +139,7 @@ app.layout = html.Div([
             dcc.Dropdown(
                 id='selected-columns',
                 options=DATA.drop(columns=['Date', 'Hour']).columns.sort_values(),
-                value=['Atmospheric pressure max (Pa)'],
+                value=[],
                 multi=True,
                 placeholder='Select columns'
             ),
@@ -148,17 +149,18 @@ app.layout = html.Div([
                 html.Div(id='histogram', style={'width': '50%', 'display': 'inline-block'}),
             ]),
             html.Div(id='bivariate-output'),
+            html.H2('Bivariate Analysis'),
             html.Div([
                 dcc.Dropdown(
                     id='bivariate-column1',
                     options=DATA.drop(columns=['Date']).columns.sort_values(),
-                    value='Atmospheric pressure at station level (Pa)',
+                    # value='Atmospheric pressure at station level (Pa)',
                     placeholder='Select first column'
                 ),
                 dcc.Dropdown(
                     id='bivariate-column2',
                     options=DATA.drop(columns=['Date']).columns.sort_values(),
-                    value='Atmospheric pressure max (Pa)',
+                    # value='Atmospheric pressure max (Pa)',
                     placeholder='Select second column'
                 ),
                 html.Div(id='bivariate')
@@ -230,6 +232,8 @@ def update_bivariate(bivariate_column1, bivariate_column2, year_start, month_sta
     end_date = dt(year_end, month_end, day_end, hour_end)
     col1 = bivariate_column1
     col2 = bivariate_column2
+    if col1 is None or col2 is None:
+        return []
     scatterplot = [dcc.Graph(figure=get_scatterplot(col1, col2, start_date, end_date))]
     return scatterplot
 

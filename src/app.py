@@ -1,5 +1,4 @@
 from dash import html, dcc, Dash, Input, Output
-import pandas as pd
 from datetime import datetime as dt
 
 from utils import DATA, get_ts, get_boxplot, get_histogram, get_scatterplot, get_scatterplot_output
@@ -235,4 +234,4 @@ def update_bivariate(bivariate_column1, bivariate_column2, year_start, month_sta
     return scatterplot
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, host='0.0.0.0', port=9000)

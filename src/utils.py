@@ -1,7 +1,7 @@
 import plotly.graph_objects as go
 import pandas as pd
 
-DATA = pd.read_csv('../data/data_wind_imputed.csv')
+DATA = pd.read_csv('../data/data_imputed.csv')
 
 def get_ts(col, start_date, end_date):
     filtered_data = DATA[(pd.to_datetime(DATA['Date']) >= start_date) & (pd.to_datetime(DATA['Date']) <= end_date)]

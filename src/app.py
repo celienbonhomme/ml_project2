@@ -2,7 +2,7 @@ from dash import html, dcc, Dash, Input, Output
 import pandas as pd
 from datetime import datetime as dt
 
-from var import DATA, get_ts, get_boxplot, get_histogram, get_scatterplot, get_scatterplot_output
+from utils import DATA, get_ts, get_boxplot, get_histogram, get_scatterplot, get_scatterplot_output
 
 app = Dash(__name__)
 

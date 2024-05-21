@@ -1,64 +1,52 @@
-import plotly.graph_objects as go
+"""Module for utils functions"""
 import pandas as pd
-
-DATA = pd.read_csv('../data/data_imputed.csv')
-
-def get_ts(col, start_date, end_date):
-    filtered_data = DATA[(pd.to_datetime(DATA['Date']) >= start_date) & (pd.to_datetime(DATA['Date']) <= end_date)]
-    plot = go.Figure()
-    plot.add_trace(go.Scatter(x=filtered_data['Date'], y=filtered_data[col], mode='lines', name=col))
-    plot.update_layout(
-        title=f'{col} over time',
-        xaxis_title='Date', 
-        yaxis_title=col,
-        margin=dict(l=20, r=20, t=40, b=20)
-    )
-    return plot
-
-def get_boxplot(col, start_date, end_date):
-    filtered_data = DATA[(pd.to_datetime(DATA['Date']) >= start_date) & (pd.to_datetime(DATA['Date']) <= end_date)]
-    plot = go.Figure()
-    plot.add_trace(go.Box(y=filtered_data[col], name=col))
-    plot.update_layout(
-        # title=f'{col} boxplot',
-        # yaxis_title=col,
-        margin=dict(l=20, r=20, t=20, b=20)
-    )
-    return plot
-
-def get_histogram(col, start_date, end_date):
-    filtered_data = DATA[(pd.to_datetime(DATA['Date']) >= start_date) & (pd.to_datetime(DATA['Date']) <= end_date)]
-    plot = go.Figure()
-    plot.add_trace(go.Histogram(x=filtered_data[col], name=col))
-    plot.update_layout(
-        # title=f'{col} histogram',
-        xaxis_title=col,
-        yaxis_title='Frequency',
-        margin=dict(l=20, r=20, t=20, b=20)
-    )
-    return plot
-
-def get_scatterplot_output(col, start_date, end_date):
-    filtered_data = DATA[(pd.to_datetime(DATA['Date']) >= start_date) & (pd.to_datetime(DATA['Date']) <= end_date)]
-    plot = go.Figure()
-    plot.add_trace(go.Scatter(x=filtered_data['Wind speed (m/s)'], y=filtered_data[col], mode='markers', name=f'{col} VS Wind speed (m/s)'))
-    plot.update_layout(
-        title=f'{col} VS Wind speed (m/s)',
-        xaxis_title='Wind speed',
-        yaxis_title='Wind gust max',
-        margin=dict(l=20, r=20, t=40, b=20)
-    )
-    return plot
+import numpy as np
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error, r2_score
+from time import time
 
 
-def get_scatterplot(col_x, col_y, start_date, end_date):
-    filtered_data = DATA[(pd.to_datetime(DATA['Date']) >= start_date) & (pd.to_datetime(DATA['Date']) <= end_date)]
-    plot = go.Figure()
-    plot.add_trace(go.Scatter(x=filtered_data[col_x], y=filtered_data[col_y], mode='markers', name=f'{col_x} vs {col_y}'))
-    plot.update_layout(
-        title=f'{col_x} VS {col_y}',
-        xaxis_title=col_x,
-        yaxis_title=col_y,
-        margin=dict(l=20, r=20, t=60, b=20)
-    )
-    return plot
+def model_evaluation_lr(y_test, y_pred):
+    mape = round(mean_absolute_percentage_error(y_test, y_pred), 3)
+    rmse = round(np.sqrt(mean_squared_error(y_test, y_pred)), 3)
+    r2 = round(r2_score(y_test, y_pred), 3)
+    return {'mape': mape, 'rmse': rmse, 'r2': r2}
+
+
+def VIF_calculation(X):
+    """Calculate the Variance Inflation Factor (VIF) for each variable in the dataset"""
+    VIF = pd.DataFrame()
+    VIF["variable"] = X.columns
+    VIF["VIF"] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
+    VIF = VIF.sort_values('VIF', ascending=False).reset_index(drop = True)
+    return(VIF)
+
+
+def delete_multicollinearity(df, target_name, VIF_threshold):
+    """Delete multicollinearity from the dataset"""
+    X = df.drop(target_name, axis=1)
+    start = time()
+    VIF_mat = VIF_calculation(X)
+    end = time()
+    n_VIF = VIF_mat["VIF"][0]
+    if (n_VIF <= VIF_threshold):
+        print("There is no multicollinearity!")
+    else:
+        while (n_VIF > VIF_threshold):
+            print(f'Dropped column {VIF_mat["variable"][0]} with VIF: {round(VIF_mat["VIF"][0], 1)} ({int(end - start)}s)')
+            X = X.drop(VIF_mat["variable"][0], axis=1)
+            start = time()
+            VIF_mat = VIF_calculation(X)
+            end = time()
+            n_VIF = VIF_mat["VIF"][0]
+    return X
+
+def print_percentage_missing_values(df):
+    nb_missing_values = df.isnull().sum().sum()
+    percentage_missing_values = round(100*nb_missing_values / (df.shape[0] * df.shape[1]), 1)
+    print(f'Missing values: {nb_missing_values} ({percentage_missing_values}%)')
+
+def percentage_missing_values(df):
+    nb_missing_values = df.isnull().sum().sum()
+    percentage_missing_values = round(100*nb_missing_values / (df.shape[0] * df.shape[1]), 1)
+    return percentage_missing_values

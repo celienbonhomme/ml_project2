@@ -1,7 +1,7 @@
 from dash import html, dcc, Dash, Input, Output
 from datetime import datetime as dt
 
-from utils import DATA, get_ts, get_boxplot, get_histogram, get_scatterplot, get_scatterplot_output
+from utils_ui import DATA, get_ts, get_boxplot, get_histogram, get_scatterplot, get_scatterplot_output
 
 app = Dash(__name__)
 

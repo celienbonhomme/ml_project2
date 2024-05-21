@@ -1,2 +1,7 @@
-dash~=2.16
-pandas~=2.2
+dash
+pandas
+scikit-learn
+scikit-optimize
+matplotlib
+statsmodels
+scikit-learn-intelex

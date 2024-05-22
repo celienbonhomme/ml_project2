@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css?v=be8a1c11" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
   
@@ -68,7 +68,7 @@ const thebe_selector_output = ".output, .cell_output"
     <script>DOCUMENTATION_OPTIONS.pagename = 'intro';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Exercise 4 (Preprocessing)" href="exo4_preprocessing.html" />
+    <link rel="next" title="Preprocessing with time consideration" href="exo4_preprocessing.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -186,12 +186,12 @@ const thebe_selector_output = ".output, .cell_output"
             </li>
         </ul>
         <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="exo4_preprocessing.html">Exercise 4 (Preprocessing)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="exo4_training_bs.html">Exercise 4 (Training with Bayes Optimization)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="exo4_training_gs.html">Exercise 4 (Training without Bayes Optimization)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="new_model.html">New Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Exercise 4 (Preprocessing)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exo4_preprocessing.html">Preprocessing with time consideration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exo4_training_bs.html">Training the time serie with Bayes Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exo4_training_gs.html">Training the time serie with gridsearch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new_model.html">Ensemble models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing without time consideration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training without time consideration</a></li>
 </ul>
 
     </div>
@@ -364,7 +364,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -380,6 +382,14 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#celien-bonhomme-leonardo-vaia">Celien BONHOMME - Leonardo VAIA</a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -391,8 +401,19 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="wind-speed-prediction-a-problem-of-the-past">
 <h1>Wind speed prediction: a problem of the past<a class="headerlink" href="#wind-speed-prediction-a-problem-of-the-past" title="Link to this heading">#</a></h1>
+<section id="celien-bonhomme-leonardo-vaia">
+<h2>Celien BONHOMME - Leonardo VAIA<a class="headerlink" href="#celien-bonhomme-leonardo-vaia" title="Link to this heading">#</a></h2>
 <div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="exo4_preprocessing.html">Preprocessing with time consideration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exo4_training_bs.html">Training the time serie with Bayes Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exo4_training_gs.html">Training the time serie with gridsearch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing without time consideration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training without time consideration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new_model.html">Ensemble models</a></li>
+</ul>
 </div>
+</section>
 </section>
 
     <script type="text/x-thebe-config">
@@ -430,7 +451,7 @@ document.write(`
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Exercise 4 (Preprocessing)</p>
+        <p class="prev-next-title">Preprocessing with time consideration</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -441,7 +462,20 @@ document.write(`
             
             
               
-                <div class="bd-sidebar-secondary bd-toc"></div>
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#celien-bonhomme-leonardo-vaia">Celien BONHOMME - Leonardo VAIA</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

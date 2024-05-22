@@ -2,11 +2,13 @@ from dash import html, dcc, Dash, Input, Output
 from datetime import datetime as dt
 import pandas as pd
 from utils_ui import get_ts, get_boxplot, get_histogram, get_scatterplot, get_scatterplot_output
+from utils import model_evaluation_lr
 import os
 import pickle
 from pathlib import Path
 import pandas as pd
 import plotly.graph_objects as go
+import numpy as np
 
 
 import warnings
@@ -16,7 +18,6 @@ warnings.filterwarnings('ignore')
 data = pd.read_csv('../data/data_preprocessed.csv')
 X, y = data.drop(columns=['Wind speed (m/s)']), data['Wind speed (m/s)']
 
-data_md = data.describe().to_markdown()
 
 X_test = X[int(0.8*len(X)):]
 y_test = y[int(0.8*len(y)):]
@@ -25,12 +26,30 @@ directory_path = Path("../pickle/models")
 path_models = os.listdir(directory_path)
 models = {path_model.split('.')[0].replace('_', ' '): {} for path_model in path_models}
 
+results = pd.DataFrame(columns=['Model', 'R2', 'RMSE'])
+nb_res = 0
 for path_model in path_models:
     with open(directory_path / path_model, 'rb') as f:
         model = pickle.load(f)
         name = path_model.split('.')[0].replace('_', ' ')
         models[name]['model'] = model
         models[name]['predictions'] = model.predict(X_test.drop(columns=['Date']))
+        eval = model_evaluation_lr(y_test, models[name]['predictions'])
+        results.loc[nb_res] = [name, eval['r2'], eval['rmse']]
+        nb_res += 1
+
+# Feature importance
+feature_importance = models['Gradient Boosting']['model'].best_estimator_['model'].feature_importances_
+features = X.drop(columns=['Date']).columns
+
+# Trier les caractéristiques par ordre décroissant d'importance
+sorted_indices = np.argsort(feature_importance)
+sorted_feature_importance = feature_importance[sorted_indices]
+sorted_features = features[sorted_indices]
+fig = go.Figure(go.Bar(x=sorted_feature_importance, y=sorted_features, orientation='h'))
+fig.update_layout(title='Feature importance (GB)', xaxis_title='Importance', yaxis_title='Feature', width=900, height=330)
+
+results_md = results.sort_values(by='R2', ascending=False).to_markdown(index=False)
 
 
 app = Dash(__name__)
@@ -38,17 +57,22 @@ app = Dash(__name__)
 app.layout = html.Div([
     dcc.Tabs([
         dcc.Tab(label='Results (without time considerations)', children=[
+            html.Div([
+                dcc.Markdown(results_md, style={'margin-right': '50px'}),
+                dcc.Graph(figure=fig),
+            ], style={'display': 'flex', 'margin-top': '20px', 'margin-bottom': '20px'}),
             dcc.Dropdown(
                 id='selected-model',
                 options=sorted(models),
                 placeholder='Select model',
                 multi=True,
+                style={'margin-bottom': '20px'  }
             ),
             html.Div([
                 html.Div(id='testVSpred'),
                 html.Div(id='time-series-prediction'),
+                html.Div(id='residuals')
             ]),
-            dcc.Markdown(data_md),
         ]),
         dcc.Tab(label='Introdution', children=[
             html.Div([
@@ -208,7 +232,7 @@ app.layout = html.Div([
             ]),
         ]),
     ])
-])
+], style={'margin-left': '20px', 'margin-right': '20px'})
 
 @app.callback(
     [Output('day-start', 'value'),
@@ -279,13 +303,14 @@ def update_bivariate(bivariate_column1, bivariate_column2, year_start, month_sta
 
 @app.callback(
     [Output('testVSpred', 'children'),
-     Output('time-series-prediction', 'children')],
+     Output('time-series-prediction', 'children'),
+     Output('residuals', 'children')],
     Input('selected-model', 'value'),
 )
 
-def update_testVSpred(selected_models):
+def update_results(selected_models):
     if selected_models is None:
-        return [], []
+        return [], [], []
     plot_testVS_pred = go.Figure()
     for selected_model in selected_models:
         plot_testVS_pred.add_trace(go.Scatter(x=y_test, y=models[selected_model]['predictions'], mode='markers', name=selected_model))
@@ -309,7 +334,19 @@ def update_testVSpred(selected_models):
         yaxis_title='Wind speed',
         margin=dict(l=20, r=20, t=40, b=20)
     )
-    return dcc.Graph(figure=plot_testVS_pred), dcc.Graph(figure=plot_ts_predictions)
+
+    plot_residuals = go.Figure()
+    for selected_model in selected_models:
+        residuals = y_test - models[selected_model]['predictions']
+        plot_residuals.add_trace(go.Histogram(x=residuals, name=selected_model, histnorm='probability', opacity=0.75))
+    plot_residuals.update_layout(
+        title='Residuals',
+        xaxis_title='Residual',
+        yaxis_title='Probability',
+        margin=dict(l=20, r=20, t=40, b=20),
+        barmode='overlay'
+    )
+    return dcc.Graph(figure=plot_testVS_pred), dcc.Graph(figure=plot_ts_predictions), dcc.Graph(figure=plot_residuals)
 
 if __name__ == '__main__':
     app.run_server(debug=True)#, host='0.0.0.0', port=9000)

@@ -7,6 +7,6 @@ chapters:
 - file: exo4_preprocessing.ipynb
 - file: exo4_training_bs.ipynb
 - file: exo4_training_gs.ipynb
-- file: new_model.ipynb
 - file: preprocessing.ipynb
 - file: training.ipynb
+- file: new_model.ipynb

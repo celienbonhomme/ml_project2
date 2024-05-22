@@ -1,12 +1,8 @@
 import plotly.graph_objects as go
-import pandas as pd
 
-DATA = pd.read_csv('../data/data_imputed.csv')
-
-def get_ts(col, start_date, end_date):
-    filtered_data = DATA[(pd.to_datetime(DATA['Date']) >= start_date) & (pd.to_datetime(DATA['Date']) <= end_date)]
+def get_ts(col, data):
     plot = go.Figure()
-    plot.add_trace(go.Scatter(x=filtered_data['Date'], y=filtered_data[col], mode='lines', name=col))
+    plot.add_trace(go.Scatter(x=data['Date'], y=data[col], mode='lines', name=col))
     plot.update_layout(
         title=f'{col} over time',
         xaxis_title='Date', 
@@ -15,10 +11,9 @@ def get_ts(col, start_date, end_date):
     )
     return plot
 
-def get_boxplot(col, start_date, end_date):
-    filtered_data = DATA[(pd.to_datetime(DATA['Date']) >= start_date) & (pd.to_datetime(DATA['Date']) <= end_date)]
+def get_boxplot(col,  data):
     plot = go.Figure()
-    plot.add_trace(go.Box(y=filtered_data[col], name=col))
+    plot.add_trace(go.Box(y=data[col], name=col))
     plot.update_layout(
         # title=f'{col} boxplot',
         # yaxis_title=col,
@@ -26,10 +21,9 @@ def get_boxplot(col, start_date, end_date):
     )
     return plot
 
-def get_histogram(col, start_date, end_date):
-    filtered_data = DATA[(pd.to_datetime(DATA['Date']) >= start_date) & (pd.to_datetime(DATA['Date']) <= end_date)]
+def get_histogram(col, data):
     plot = go.Figure()
-    plot.add_trace(go.Histogram(x=filtered_data[col], name=col))
+    plot.add_trace(go.Histogram(x=data[col], name=col))
     plot.update_layout(
         # title=f'{col} histogram',
         xaxis_title=col,
@@ -38,10 +32,9 @@ def get_histogram(col, start_date, end_date):
     )
     return plot
 
-def get_scatterplot_output(col, start_date, end_date):
-    filtered_data = DATA[(pd.to_datetime(DATA['Date']) >= start_date) & (pd.to_datetime(DATA['Date']) <= end_date)]
+def get_scatterplot_output(col, data):
     plot = go.Figure()
-    plot.add_trace(go.Scatter(x=filtered_data['Wind speed (m/s)'], y=filtered_data[col], mode='markers', name=f'{col} VS Wind speed (m/s)'))
+    plot.add_trace(go.Scatter(x=data['Wind speed (m/s)'], y=data[col], mode='markers', name=f'{col} VS Wind speed (m/s)'))
     plot.update_layout(
         title=f'{col} VS Wind speed (m/s)',
         xaxis_title='Wind speed',
@@ -51,10 +44,9 @@ def get_scatterplot_output(col, start_date, end_date):
     return plot
 
 
-def get_scatterplot(col_x, col_y, start_date, end_date):
-    filtered_data = DATA[(pd.to_datetime(DATA['Date']) >= start_date) & (pd.to_datetime(DATA['Date']) <= end_date)]
+def get_scatterplot(col_x, col_y, data):
     plot = go.Figure()
-    plot.add_trace(go.Scatter(x=filtered_data[col_x], y=filtered_data[col_y], mode='markers', name=f'{col_x} vs {col_y}'))
+    plot.add_trace(go.Scatter(x=data[col_x], y=data[col_y], mode='markers', name=f'{col_x} vs {col_y}'))
     plot.update_layout(
         title=f'{col_x} VS {col_y}',
         xaxis_title=col_x,

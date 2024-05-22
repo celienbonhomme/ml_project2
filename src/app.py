@@ -1,12 +1,50 @@
 from dash import html, dcc, Dash, Input, Output
 from datetime import datetime as dt
+import pandas as pd
+from utils_ui import get_ts, get_boxplot, get_histogram, get_scatterplot, get_scatterplot_output
+import os
+import pickle
+from pathlib import Path
+from sklearn.model_selection import train_test_split
+import pandas as pd
+import plotly.graph_objects as go
 
-from utils_ui import DATA, get_ts, get_boxplot, get_histogram, get_scatterplot, get_scatterplot_output
+
+import warnings
+warnings.filterwarnings('ignore')
+
+data = pd.read_csv('../data/data_preprocessed.csv')
+X, y = data.drop(columns=['Wind speed (m/s)']), data['Wind speed (m/s)']
+_, X_test, _, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
+
+directory_path = Path("../pickle/models")
+path_models = os.listdir(directory_path)
+models = {path_model.split('.')[0].replace('_', ' '): {} for path_model in path_models}
+
+for path_model in path_models:
+    with open(directory_path / path_model, 'rb') as f:
+        model = pickle.load(f)
+        name = path_model.split('.')[0].replace('_', ' ')
+        models[name]['model'] = model
+        models[name]['predictions'] = model.predict(X_test.drop(columns=['Date']))
+
 
 app = Dash(__name__)
 
 app.layout = html.Div([
     dcc.Tabs([
+        dcc.Tab(label='Results (without time considerations)', children=[
+            dcc.Dropdown(
+                id='selected-model',
+                options=sorted(models),
+                placeholder='Select model',
+                multi=True,
+            ),
+            html.Div([
+                html.Div(id='testVSpred'),
+                html.Div(id='time-series-prediction'),
+            ]),
+        ]),
         dcc.Tab(label='Introdution', children=[
             html.Div([
                 html.Img(
@@ -138,7 +176,7 @@ app.layout = html.Div([
             ], style={'margin-top': '20px'}), 
             dcc.Dropdown(
                 id='selected-columns',
-                options=DATA.drop(columns=['Date', 'Hour']).columns.sort_values(),
+                options=data.drop(columns=['Date', 'Hour']).columns.sort_values(),
                 value=[],
                 multi=True,
                 placeholder='Select columns'
@@ -153,22 +191,16 @@ app.layout = html.Div([
             html.Div([
                 dcc.Dropdown(
                     id='bivariate-column1',
-                    options=DATA.drop(columns=['Date']).columns.sort_values(),
-                    # value='Atmospheric pressure at station level (Pa)',
+                    options=data.drop(columns=['Date']).columns.sort_values(),
                     placeholder='Select first column'
                 ),
                 dcc.Dropdown(
                     id='bivariate-column2',
-                    options=DATA.drop(columns=['Date']).columns.sort_values(),
-                    # value='Atmospheric pressure max (Pa)',
+                    options=data.drop(columns=['Date']).columns.sort_values(),
                     placeholder='Select second column'
                 ),
                 html.Div(id='bivariate')
             ]),
-        ]),
-
-        dcc.Tab(label='Results', children=[
-            # TODO
         ]),
     ])
 ])
@@ -205,11 +237,12 @@ def reset_dates(n_clicks):
 def update_time_series(selected_columns, year_start, month_start, day_start, hour_start, year_end, month_end, day_end, hour_end):
     start_date = dt(year_start, month_start, day_start, hour_start)
     end_date = dt(year_end, month_end, day_end, hour_end)
+    filtered_data = data[(pd.to_datetime(data['Date']) >= start_date) & (pd.to_datetime(data['Date']) <= end_date)]
     
-    time_series = [dcc.Graph(figure=get_ts(col, start_date, end_date)) for col in selected_columns]
-    boxplot = [dcc.Graph(figure=get_boxplot(col, start_date, end_date)) for col in selected_columns]
-    histogram = [dcc.Graph(figure=get_histogram(col, start_date, end_date)) for col in selected_columns]
-    bivariate = [dcc.Graph(figure=get_scatterplot_output(col, start_date, end_date)) for col in selected_columns]
+    time_series = [dcc.Graph(figure=get_ts(col, filtered_data)) for col in selected_columns]
+    boxplot = [dcc.Graph(figure=get_boxplot(col, filtered_data)) for col in selected_columns]
+    histogram = [dcc.Graph(figure=get_histogram(col, filtered_data)) for col in selected_columns]
+    bivariate = [dcc.Graph(figure=get_scatterplot_output(col, filtered_data)) for col in selected_columns]
 
     return time_series, boxplot, histogram, bivariate
 
@@ -230,12 +263,49 @@ def update_time_series(selected_columns, year_start, month_start, day_start, hou
 def update_bivariate(bivariate_column1, bivariate_column2, year_start, month_start, day_start, hour_start, year_end, month_end, day_end, hour_end):
     start_date = dt(year_start, month_start, day_start, hour_start)
     end_date = dt(year_end, month_end, day_end, hour_end)
+    filtered_data = data[(pd.to_datetime(data['Date']) >= start_date) & (pd.to_datetime(data['Date']) <= end_date)]
+
     col1 = bivariate_column1
     col2 = bivariate_column2
     if col1 is None or col2 is None:
         return []
-    scatterplot = [dcc.Graph(figure=get_scatterplot(col1, col2, start_date, end_date))]
+    scatterplot = [dcc.Graph(figure=get_scatterplot(col1, col2, filtered_data))]
     return scatterplot
 
+@app.callback(
+    [Output('testVSpred', 'children'),
+     Output('time-series-prediction', 'children')],
+    Input('selected-model', 'value'),
+)
+
+def update_testVSpred(selected_models):
+    if selected_models is None:
+        return [], []
+    plot_testVS_pred = go.Figure()
+    for selected_model in selected_models:
+        plot_testVS_pred.add_trace(go.Scatter(x=y_test, y=models[selected_model]['predictions'], mode='markers', name=selected_model))
+    plot_testVS_pred.update_layout(
+        title='Actual vs Predicted',
+        xaxis_title='Actual',
+        yaxis_title='Predicted',
+        margin=dict(l=20, r=20, t=40, b=20)
+    )
+    plot_testVS_pred.add_trace(go.Scatter(x=[0, 10], y=[0, 10], mode='lines', line=dict(color='black', width=2), name='y=x'))
+
+    plot_ts_predictions = go.Figure()
+    plot_ts_predictions.add_trace(go.Scatter
+        (x=X_test['Date'], y=y_test, mode='markers+lines', name='actual'))
+    
+    for selected_model in selected_models:
+        plot_ts_predictions.add_trace(go.Scatter
+            (x=X_test['Date'], y=models[selected_model]['predictions'], mode='markers+lines', name=selected_model))
+    plot_ts_predictions.update_layout(
+        title='Wind speed prediction over time',
+        xaxis_title='Date',
+        yaxis_title='Wind speed',
+        margin=dict(l=20, r=20, t=40, b=20)
+    )
+    return dcc.Graph(figure=plot_testVS_pred), dcc.Graph(figure=plot_ts_predictions)
+
 if __name__ == '__main__':
-    app.run_server(debug=True, host='0.0.0.0', port=9000)
+    app.run_server(debug=True)#, host='0.0.0.0', port=9000)

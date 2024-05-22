@@ -4,4 +4,4 @@ scikit-learn
 scikit-optimize
 matplotlib
 statsmodels
-scikit-learn-intelex
+tabulate

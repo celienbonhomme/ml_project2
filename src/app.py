@@ -5,7 +5,6 @@ from utils_ui import get_ts, get_boxplot, get_histogram, get_scatterplot, get_sc
 import os
 import pickle
 from pathlib import Path
-from sklearn.model_selection import train_test_split
 import pandas as pd
 import plotly.graph_objects as go
 
@@ -13,9 +12,14 @@ import plotly.graph_objects as go
 import warnings
 warnings.filterwarnings('ignore')
 
+
 data = pd.read_csv('../data/data_preprocessed.csv')
 X, y = data.drop(columns=['Wind speed (m/s)']), data['Wind speed (m/s)']
-_, X_test, _, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
+
+data_md = data.describe().to_markdown()
+
+X_test = X[int(0.8*len(X)):]
+y_test = y[int(0.8*len(y)):]
 
 directory_path = Path("../pickle/models")
 path_models = os.listdir(directory_path)
@@ -44,6 +48,7 @@ app.layout = html.Div([
                 html.Div(id='testVSpred'),
                 html.Div(id='time-series-prediction'),
             ]),
+            dcc.Markdown(data_md),
         ]),
         dcc.Tab(label='Introdution', children=[
             html.Div([
@@ -294,8 +299,7 @@ def update_testVSpred(selected_models):
 
     plot_ts_predictions = go.Figure()
     plot_ts_predictions.add_trace(go.Scatter
-        (x=X_test['Date'], y=y_test, mode='markers+lines', name='actual'))
-    
+        (x=X_test['Date'], y=y_test, mode='markers+lines', name='actual', marker=dict(color='black')))
     for selected_model in selected_models:
         plot_ts_predictions.add_trace(go.Scatter
             (x=X_test['Date'], y=models[selected_model]['predictions'], mode='markers+lines', name=selected_model))

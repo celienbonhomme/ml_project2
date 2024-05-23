@@ -68,6 +68,7 @@ const thebe_selector_output = ".output, .cell_output"
     <script>DOCUMENTATION_OPTIONS.pagename = 'training';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Ensemble models" href="new_model.html" />
     <link rel="prev" title="Preprocessing without time consideration" href="preprocessing.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -528,19 +529,6 @@ document.write(`
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>1.22.1
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span>
 <span class="kn">from</span> <span class="nn">skopt</span> <span class="kn">import</span> <span class="n">BayesSearchCV</span>
 <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
@@ -576,7 +564,7 @@ document.write(`
             <span class="o">**</span><span class="n">dict_model</span><span class="p">[</span><span class="s1">&#39;grid&#39;</span><span class="p">]</span>
         <span class="p">}</span>
 
-        <span class="n">model</span> <span class="o">=</span> <span class="n">BayesSearchCV</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">search_spaces</span><span class="o">=</span><span class="n">param_grid</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;r2&#39;</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">BayesSearchCV</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">search_spaces</span><span class="o">=</span><span class="n">param_grid</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;neg_mean_squared_error&#39;</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
 
         <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
         <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
@@ -613,37 +601,37 @@ document.write(`
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training Gradient_Boosting...
-CPU Time: 252s
+CPU Time: 250s
 Best params Gradient_Boosting: 
 OrderedDict([(&#39;model__learning_rate&#39;, 0.013594004182195795), (&#39;model__max_depth&#39;, 8), (&#39;model__n_estimators&#39;, 225), (&#39;scaler&#39;, None)])
 
 Training Random_Forest...
-CPU Time: 239s
+CPU Time: 247s
 Best params Random_Forest: 
 OrderedDict([(&#39;model__max_depth&#39;, 9), (&#39;model__n_estimators&#39;, 300), (&#39;scaler&#39;, None)])
 
 Training Decision_Tree...
-CPU Time: 6s
+CPU Time: 8s
 Best params Decision_Tree: 
 OrderedDict([(&#39;model__max_depth&#39;, 8), (&#39;scaler&#39;, None)])
 
 Training Linear_Regression...
-CPU Time: 5s
+CPU Time: 7s
 Best params Linear_Regression: 
 OrderedDict([(&#39;scaler&#39;, None)])
 
 Training Ridge...
-CPU Time: 5s
+CPU Time: 8s
 Best params Ridge: 
 OrderedDict([(&#39;model__alpha&#39;, 0.0001), (&#39;scaler&#39;, MinMaxScaler())])
 
 Training KNN...
-CPU Time: 15s
+CPU Time: 22s
 Best params KNN: 
 OrderedDict([(&#39;model__n_neighbors&#39;, 20), (&#39;scaler&#39;, StandardScaler())])
 
 Training Lasso...
-CPU Time: 6s
+CPU Time: 7s
 Best params Lasso: 
 OrderedDict([(&#39;model__alpha&#39;, 0.0001), (&#39;scaler&#39;, None)])
 </pre></div>
@@ -660,13 +648,13 @@ OrderedDict([(&#39;model__alpha&#39;, 0.0001), (&#39;scaler&#39;, None)])
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>            Model  CPU time  RMSE    R2
-Gradient_Boosting       252 0.558 0.799
-    Random_Forest       239 0.566 0.793
-    Decision_Tree         6 0.583 0.780
-Linear_Regression         5 0.600 0.767
-            Ridge         5 0.600 0.767
-              KNN        15 0.604 0.764
-            Lasso         6 0.606 0.763
+Gradient_Boosting       250 0.558 0.799
+    Random_Forest       247 0.566 0.793
+    Decision_Tree         8 0.583 0.780
+Linear_Regression         7 0.600 0.767
+            Ridge         8 0.600 0.767
+              KNN        22 0.604 0.764
+            Lasso         7 0.606 0.763
 </pre></div>
 </div>
 </div>
@@ -694,7 +682,7 @@ Linear_Regression         5 0.600 0.767
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="_images/1713bf1d44b63ab84372cb64292a8e7ae9cf9bcfb8974b963d0a690564d3f0ce.png" src="_images/1713bf1d44b63ab84372cb64292a8e7ae9cf9bcfb8974b963d0a690564d3f0ce.png" />
+<img alt="_images/ebcebf3a3c5593b270c0b104a4c90f422cf6d2b31de1a29c8b9abf17a9cfe84e.png" src="_images/ebcebf3a3c5593b270c0b104a4c90f422cf6d2b31de1a29c8b9abf17a9cfe84e.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -718,7 +706,7 @@ Linear_Regression         5 0.600 0.767
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="_images/dcd215802e1b877cdfb5349a544c78a16c6c1bcfe6568c0101b18d31374e9b83.png" src="_images/dcd215802e1b877cdfb5349a544c78a16c6c1bcfe6568c0101b18d31374e9b83.png" />
+<img alt="_images/2011ff14923222332fb0f73cb3123ef2c27e8321da5e461149ca1d02099e4c7b.png" src="_images/2011ff14923222332fb0f73cb3123ef2c27e8321da5e461149ca1d02099e4c7b.png" />
 </div>
 </div>
 </section>
@@ -762,6 +750,15 @@ Linear_Regression         5 0.600 0.767
         <p class="prev-next-subtitle">previous</p>
         <p class="prev-next-title">Preprocessing without time consideration</p>
       </div>
+    </a>
+    <a class="right-next"
+       href="new_model.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Ensemble models</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>

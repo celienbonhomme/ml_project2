@@ -9,11 +9,12 @@ from pathlib import Path
 import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
+from scipy.stats import norm
+from time import time
 
 
 import warnings
 warnings.filterwarnings('ignore')
-
 
 data = pd.read_csv('../data/data_preprocessed.csv')
 X, y = data.drop(columns=['Wind speed (m/s)']), data['Wind speed (m/s)']
@@ -22,58 +23,51 @@ X, y = data.drop(columns=['Wind speed (m/s)']), data['Wind speed (m/s)']
 X_test = X[int(0.8*len(X)):]
 y_test = y[int(0.8*len(y)):]
 
-directory_path = Path("../pickle/models")
-path_models = os.listdir(directory_path)
+directory_path_models = Path("../pickle/models")
+path_models = os.listdir(directory_path_models)
 models = {path_model.split('.')[0].replace('_', ' '): {} for path_model in path_models}
 
-results = pd.DataFrame(columns=['Model', 'R2', 'RMSE'])
+results = pd.DataFrame(columns=['Model', 'Training time (s)', 'Predicting time (ms)', 'R2', 'RMSE'])
+results_residuals = pd.DataFrame(columns=['Model', 'Mean', 'Std'])
 nb_res = 0
 for path_model in path_models:
-    with open(directory_path / path_model, 'rb') as f:
-        model = pickle.load(f)
-        name = path_model.split('.')[0].replace('_', ' ')
-        models[name]['model'] = model
-        models[name]['predictions'] = model.predict(X_test.drop(columns=['Date']))
-        eval = model_evaluation_lr(y_test, models[name]['predictions'])
-        results.loc[nb_res] = [name, eval['r2'], eval['rmse']]
-        nb_res += 1
+    path_model = str(directory_path_models / path_model)
+    path_cpu_time = path_model.replace('models', 'cpu_time').replace('.pkl', '_time.pkl')
+    with open(path_model, 'rb') as f1:
+        model = pickle.load(f1)
+    with open(path_cpu_time, 'rb') as f2:
+        training_time = pickle.load(f2)
+    name = path_model.split('/')[-1].split('.')[0].replace('_', ' ')
+    models[name]['model'] = model
+    start = time()
+    models[name]['predictions'] = model.predict(X_test.drop(columns=['Date']))
+    end = time()
+    predict_time = round((end - start)*1000)
+    eval = model_evaluation_lr(y_test, models[name]['predictions'])
+    results.loc[nb_res] = [name, training_time, predict_time, eval['r2'], eval['rmse']]
+    residuals = y_test - models[name]['predictions']
+    norm_res = norm.fit(residuals)
+    results_residuals.loc[nb_res] = [name, round(norm_res[0], 2), round(norm_res[1], 2)]
+    nb_res += 1
 
 # Feature importance
 feature_importance = models['Gradient Boosting']['model'].best_estimator_['model'].feature_importances_
 features = X.drop(columns=['Date']).columns
 
-# Trier les caractéristiques par ordre décroissant d'importance
 sorted_indices = np.argsort(feature_importance)
 sorted_feature_importance = feature_importance[sorted_indices]
 sorted_features = features[sorted_indices]
 fig = go.Figure(go.Bar(x=sorted_feature_importance, y=sorted_features, orientation='h'))
-fig.update_layout(title='Feature importance (GB)', xaxis_title='Importance', yaxis_title='Feature', width=900, height=330)
+fig.update_layout(title='Feature importance (GB)', xaxis_title='Importance', yaxis_title='Feature', width=750, height=330)
 
 results_md = results.sort_values(by='R2', ascending=False).to_markdown(index=False)
+tab_residuals_md = results_residuals.sort_values(by='Std').to_markdown(index=False)
 
 
 app = Dash(__name__)
 
 app.layout = html.Div([
     dcc.Tabs([
-        dcc.Tab(label='Results (without time considerations)', children=[
-            html.Div([
-                dcc.Markdown(results_md, style={'margin-right': '50px'}),
-                dcc.Graph(figure=fig),
-            ], style={'display': 'flex', 'margin-top': '20px', 'margin-bottom': '20px'}),
-            dcc.Dropdown(
-                id='selected-model',
-                options=sorted(models),
-                placeholder='Select model',
-                multi=True,
-                style={'margin-bottom': '20px'  }
-            ),
-            html.Div([
-                html.Div(id='testVSpred'),
-                html.Div(id='time-series-prediction'),
-                html.Div(id='residuals')
-            ]),
-        ]),
         dcc.Tab(label='Introdution', children=[
             html.Div([
                 html.Img(
@@ -107,7 +101,7 @@ app.layout = html.Div([
                     style={'height': '250px', 'width': 'auto', 'float': 'right', 'margin-left': '20px'}
                 ),
                 html.P(
-                    "This project focuses on utilizing machine learning techniques to forecast wind speeds for the following day. By developing an accurate predictive model, we aim to address a critical challenge in the renewable energy sector: the variability of wind resources. With reliable wind speed forecasts, wind farm operators can strategically adjust turbine operations, enhancing overall energy production efficiency.", 
+                    "This project focuses on using machine learning techniques to forecast wind speeds for the following day. By developing an accurate predictive model, we aim to address a critical challenge in the renewable energy sector: the variability of wind resources. With reliable wind speed forecasts, wind farm operators can strategically adjust turbine operations, enhancing overall energy production efficiency.", 
                     style={'display': 'inline-block', 'text-align': 'justify', 'font-family': 'Verdana, Geneva, sans-serif', 'font-size': '18px'}
                 ),
             ], style={'display': 'flex', 'flex-direction': 'row-reverse', 'align-items': 'center', 'margin-left': '20px', 'margin-right': '20px', 'margin-bottom': '40px'}),
@@ -206,7 +200,7 @@ app.layout = html.Div([
             dcc.Dropdown(
                 id='selected-columns',
                 options=data.drop(columns=['Date', 'Hour']).columns.sort_values(),
-                value=[],
+                value=['Wind speed (m/s)'],
                 multi=True,
                 placeholder='Select columns'
             ),
@@ -229,6 +223,28 @@ app.layout = html.Div([
                     placeholder='Select second column'
                 ),
                 html.Div(id='bivariate')
+            ]),
+        ]),
+        dcc.Tab(label='Results (without time considerations)', children=[
+            html.Div([
+                dcc.Markdown(results_md, style={'margin-right': '50px'}),
+                dcc.Graph(figure=fig),
+            ], style={'display': 'flex', 'margin-top': '20px', 'margin-bottom': '20px'}),
+            dcc.Dropdown(
+                id='selected-model',
+                options=sorted(models),
+                placeholder='Select model',
+                value=['Gradient Boosting', 'Linear Regression'],
+                multi=True,
+                style={'margin-bottom': '20px'}
+            ),
+            html.Div([
+                html.Div(id='testVSpred'),
+                html.Div(id='time-series-prediction'),
+                html.Div([
+                    dcc.Markdown(tab_residuals_md, style= {'margin-right': '50px'}),
+                    html.Div(id='residuals')
+                ], style={'display': 'flex'})
             ]),
         ]),
     ])
@@ -338,15 +354,17 @@ def update_results(selected_models):
     plot_residuals = go.Figure()
     for selected_model in selected_models:
         residuals = y_test - models[selected_model]['predictions']
-        plot_residuals.add_trace(go.Histogram(x=residuals, name=selected_model, histnorm='probability', opacity=0.75))
+        plot_residuals.add_trace(go.Histogram(x=residuals, name=selected_model, histnorm='probability', opacity=0.3))
     plot_residuals.update_layout(
-        title='Residuals',
         xaxis_title='Residual',
         yaxis_title='Probability',
         margin=dict(l=20, r=20, t=40, b=20),
-        barmode='overlay'
+        barmode='overlay',
+        height=300,
+        width=900,
     )
+    plot_residuals.update_xaxes(range=[-2, 2])
     return dcc.Graph(figure=plot_testVS_pred), dcc.Graph(figure=plot_ts_predictions), dcc.Graph(figure=plot_residuals)
 
 if __name__ == '__main__':
-    app.run_server(debug=True)#, host='0.0.0.0', port=9000)
+    app.run_server(debug=True, host='0.0.0.0', port=9000)

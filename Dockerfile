@@ -7,5 +7,6 @@ RUN pip install --no-cache-dir --upgrade -r /requirements.txt
 
 COPY src /src
 COPY data /data
+COPY pickle /pickle
 
 CMD ["python", "/src/app.py"]
